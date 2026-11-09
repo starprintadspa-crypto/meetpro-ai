@@ -1,0 +1,59 @@
+// MEETPRO AI - Prisma schema
+// DATABASE_URL backend/.env se aata hai (local: SQLite, baad mein PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Meeting {
+  id           String               @id @default(uuid())
+  roomId       String               @unique
+  title        String               @default("Meeting")
+  hostId       String?
+  status       String               @default("active")
+  isLocked     Boolean              @default(false)
+  scheduledAt  DateTime?
+  createdAt    DateTime             @default(now())
+  endedAt      DateTime?
+  messages     MeetingMessage[]
+  participants MeetingParticipant[]
+
+  @@index([hostId])
+}
+
+model MeetingMessage {
+  id         String   @id @default(uuid())
+  meetingId  String
+  meeting    Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  senderId   String
+  senderName String
+  message    String
+  createdAt  DateTime @default(now())
+
+  @@index([meetingId, createdAt])
+}
+
+model MeetingParticipant {
+  id          String    @id @default(uuid())
+  meetingId   String
+  meeting     Meeting   @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId      String?
+  displayName String
+  joinedAt    DateTime  @default(now())
+  leftAt      DateTime?
+
+  @@index([meetingId])
+}
